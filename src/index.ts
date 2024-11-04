@@ -20,6 +20,13 @@ app.get('/', (req, res) => {
     });
 });
 
+// Rota para a página de gerenciamento
+app.get('/manager', (req, res) => {
+    res.render('manager', {
+        title: 'Gerenciamento de Templates'
+    });
+});
+
 // Iniciar o servidor
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
