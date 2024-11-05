@@ -3,154 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Scripts de Alta Conversão</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            padding-top: 56px; /* Altura da navbar */
+        }
+
+        .page-container {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+
+        .sidebar {
+            width: 250px;
+            min-width: 250px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding-top: 1rem;
+            height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+            overflow-y: auto;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .nav-link {
+            color: #333;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link:hover {
+            background-color: #e9ecef;
+        }
+
+        .nav-link.active {
+            color: #0d6efd;
+            background-color: #e9ecef;
+        }
+
+        .briefing-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .funnel-section {
+            border-left: 4px solid #0d6efd;
+            padding-left: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1030;
+            background-color: white;
+        }
+
+        .navbar-brand {
+            color: #0d6efd !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
-    <%- include('partials/navbar') %>
-
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <%- include('partials/sidebar') %>
-
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10 p-4">
-                <!-- Tabs -->
-                <ul class="nav nav-tabs mb-4" id="managerTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="categories-tab" data-bs-toggle="tab" 
-                                data-bs-target="#categories" type="button" role="tab">
-                            <i class="fas fa-tags me-2"></i>
-                            Categorias
-                        </button>
+    <nav class="navbar navbar-expand-lg navbar-light border-bottom">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">Template System</a>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Início</a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="templates-tab" data-bs-toggle="tab" 
-                                data-bs-target="#templates" type="button" role="tab">
-                            <i class="fas fa-file-alt me-2"></i>
-                            Templates
-                        </button>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-cogs me-1"></i>Gerenciador</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i>Usuário Master
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                        </ul>
                     </li>
                 </ul>
+                <button class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#newScriptModal">
+                    <i class="fas fa-plus me-1"></i>Novo Script
+                </button>
+            </div>
+        </div>
+    </nav>
 
-                <!-- Tab Content -->
-                <div class="tab-content" id="managerTabsContent">
-                    <!-- Categories Tab -->
-                    <div class="tab-pane fade show active" id="categories" role="tabpanel">
-                        <div class="row">
-                            <!-- Category Form -->
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-plus-circle me-2"></i>
-                                            Nova Categoria
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="categoryForm">
-                                            <div class="mb-3">
-                                                <label class="form-label">Nome</label>
-                                                <input type="text" class="form-control" name="name" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Palavras-chave</label>
-                                                <textarea class="form-control" name="keywords" rows="3" 
-                                                    placeholder="Separadas por vírgula" required></textarea>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Peso</label>
-                                                <input type="number" class="form-control" name="weight" 
-                                                    min="0.5" max="5" step="0.5" value="1" required>
-                                                <div class="form-text">
-                                                    Valor entre 0.5 e 5, usado para ajustar a importância da categoria
-                                                </div>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save me-2"></i>
-                                                Salvar Categoria
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
+    <div class="page-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#"><i class="fas fa-question-circle me-2"></i>Dúvidas Frequentes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-users me-2"></i>Leads</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-user-friends me-2"></i>Clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-cog me-2"></i>Configurações</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-chart-pie me-2"></i>Relatórios</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-lock me-2"></i>Privacidade e Segurança</a>
+                </li>
+            </ul>
+        </div>
 
-                            <!-- Categories List -->
-                            <div class="col-md-8">
-                                <div class="card">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-list me-2"></i>
-                                            Categorias Existentes
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="categoriesList" class="row g-3">
-                                            <!-- Categories will be inserted here -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="mb-4">Scripts de Alta Conversão</h2>
+
+            <!-- Topo de Funil -->
+            <div class="funnel-section">
+                <h3>Topo de Funil: Conscientização e Descoberta</h3>
+                <div class="briefing-box">
+                    <h5><i class="fas fa-info-circle me-2"></i>Briefing</h5>
+                    <p class="mb-0">Scripts focados em estabelecer o primeiro contato e identificar necessidades iniciais do cliente.</p>
+                </div>
+                <div class="row mt-3" id="topoFunilScripts">
+                    <!-- Scripts serão inseridos aqui -->
+                </div>
+            </div>
+
+            <!-- Meio de Funil -->
+            <div class="funnel-section">
+                <h3>Meio de Funil: Análise e Intenção</h3>
+                <div class="briefing-box">
+                    <h5><i class="fas fa-info-circle me-2"></i>Briefing</h5>
+                    <p class="mb-0">Scripts para qualificação e negociação com clientes já interessados.</p>
+                </div>
+                <div class="row mt-3" id="meioFunilScripts">
+                    <!-- Scripts serão inseridos aqui -->
+                </div>
+            </div>
+
+            <!-- Fundo de Funil -->
+            <div class="funnel-section">
+                <h3>Fundo de Funil: Decisão e Ação</h3>
+                <div class="briefing-box">
+                    <h5><i class="fas fa-info-circle me-2"></i>Briefing</h5>
+                    <p class="mb-0">Scripts para fechamento e confirmação de vendas.</p>
+                </div>
+                <div class="row mt-3" id="fundoFunilScripts">
+                    <!-- Scripts serão inseridos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Novo Script -->
+    <div class="modal fade" id="newScriptModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Script</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="scriptForm">
+                        <div class="mb-3">
+                            <label class="form-label">Etapa do Funil</label>
+                            <select class="form-select" name="funnelStage" required>
+                                <option value="">Selecione a etapa...</option>
+                                <option value="topo">Topo de Funil</option>
+                                <option value="meio">Meio de Funil</option>
+                                <option value="fundo">Fundo de Funil</option>
+                            </select>
                         </div>
-                    </div>
-
-                    <!-- Templates Tab -->
-                    <div class="tab-pane fade" id="templates" role="tabpanel">
-                        <div class="row">
-                            <!-- Template Form -->
-                            <div class="col-md-5">
-                                <div class="card">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-plus-circle me-2"></i>
-                                            Novo Template
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="templateForm">
-                                            <div class="mb-3">
-                                                <label class="form-label">Categoria</label>
-                                                <select class="form-select" name="categoryId" required>
-                                                    <option value="">Selecione uma categoria...</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Texto do Template</label>
-                                                <textarea class="form-control" name="text" rows="4" required></textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save me-2"></i>
-                                                Salvar Template
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Templates List -->
-                            <div class="col-md-7">
-                                <div class="card">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-list me-2"></i>
-                                            Templates Existentes
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div id="templatesList" class="row g-3">
-                                            <!-- Templates will be inserted here -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Título</label>
+                            <input type="text" class="form-control" name="title" required>
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Texto do Script</label>
+                            <textarea class="form-control" name="content" rows="6" required></textarea>
+                            <small class="form-text text-muted">
+                                Use {Nome do Contato}, {Seu Nome}, {Sua Empresa} para campos dinâmicos
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveScript()">Salvar Script</button>
                 </div>
             </div>
         </div>
@@ -158,6 +216,6 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/manager.js"></script>
+    <script src="/js/scripts-manager.js"></script>
 </body>
 </html>

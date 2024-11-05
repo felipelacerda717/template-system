@@ -1,290 +1,165 @@
-// Estado global para cache de dados
-const state = {
-    categories: [],
-    templates: [],
-    setCategories(newCategories) {
-        this.categories = newCategories;
-        this.updateCategorySelects();
-    },
-    updateCategorySelects() {
-        const selects = document.querySelectorAll('select[name="categoryId"]');
-        selects.forEach(select => {
-            const currentValue = select.value;
-            select.innerHTML = `
-                <option value="">Selecione uma categoria...</option>
-                ${this.categories.map(category => `
-                    <option value="${category.id}" ${category.id === currentValue ? 'selected' : ''}>
-                        ${category.name}
-                    </option>
-                `).join('')}
-            `;
-        });
-    }
+// Exemplo de estrutura de dados
+const mockScripts = {
+    topo: [
+        {
+            id: 1,
+            title: "Script para estabelecer um primeiro contato",
+            description: "Abordagem inicial para novos leads",
+            content: "Olá, {Nome do Contato}, meu nome é {Seu Nome} e trabalho na {Sua Empresa}. Recebi seu contato porque você interagiu em nosso anúncio, tenho certeza que nossos serviços podem ser de grande interesse para você. Você tem alguns minutos para conversar?",
+            tags: ["primeiro contato", "apresentação"]
+        },
+        {
+            id: 2,
+            title: "Script para identificação das necessidades",
+            description: "Entender as principais dores do cliente",
+            content: "Oi, {Nome do Contato}. Eu sou {Seu Nome}, da {Sua Empresa}. Nós oferecemos soluções para que você volte a sorrir com confiança e acredito que podemos ajudar a dar adeus a insegurança na hora de sorrir ou mastigar. Você tem algum tempo para conversar sobre isso?",
+            tags: ["necessidades", "diagnóstico"]
+        }
+    ],
+    meio: [
+        {
+            id: 3,
+            title: "Script de negociação de preço",
+            description: "Quando o cliente questiona valores",
+            content: "Compreendo sua preocupação com o investimento. Nossos valores são definidos com base na qualidade dos materiais utilizados e na expertise de nossa equipe. Além disso, oferecemos diversas formas de pagamento que podem facilitar esse investimento...",
+            tags: ["preço", "negociação", "objeções"]
+        }
+    ],
+    fundo: [
+        {
+            id: 4,
+            title: "Script de fechamento",
+            description: "Confirmação final do tratamento",
+            content: "Que ótimo que você decidiu investir em seu sorriso! Vou confirmar todos os detalhes do seu tratamento e agendar sua primeira consulta...",
+            tags: ["fechamento", "confirmação"]
+        }
+    ]
 };
 
-// Funções Utilitárias
-function showToast(title, message, type = 'info') {
-    // Criar container de toast se não existir
-    let toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        document.body.appendChild(toastContainer);
-    }
+// Funções de renderização
+function renderScripts() {
+    renderFunnelSection('topo', document.getElementById('topoFunilScripts'));
+    renderFunnelSection('meio', document.getElementById('meioFunilScripts'));
+    renderFunnelSection('fundo', document.getElementById('fundoFunilScripts'));
+}
 
-    const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <strong>${title}</strong><br>
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
+function renderFunnelSection(stage, container) {
+    if (!container) return;
+
+    const scripts = mockScripts[stage] || [];
     
-    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-    const toast = toastContainer.lastElementChild;
-    const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
-    
-    toast.addEventListener('hidden.bs.toast', () => toast.remove());
-    bsToast.show();
-}
-
-function setFormLoading(formId, loading) {
-    const form = document.getElementById(formId);
-    if (!form) return;
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    const inputs = form.querySelectorAll('input, textarea, select, button');
-    
-    submitButton.disabled = loading;
-    inputs.forEach(input => input.disabled = loading);
-}
-
-function resetForm(formId) {
-    const form = document.getElementById(formId);
-    if (form) {
-        form.reset();
-        const weightInput = form.querySelector('input[name="weight"]');
-        if (weightInput) weightInput.value = "1";
-    }
-}
-
-// Funções de API
-async function handleRequestError(response) {
-    if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        let error = 'Ocorreu um erro na operação';
-        
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            error = data.error || data.message || error;
-        }
-        
-        throw new Error(error);
-    }
-    return response.json();
-}
-
-// Gerenciamento de Categorias
-async function loadCategories() {
-    try {
-        const response = await fetch('/api/categories');
-        const categories = await handleRequestError(response);
-        state.setCategories(categories);
-        displayCategories(categories);
-    } catch (error) {
-        showToast('Erro', error.message, 'danger');
-    }
-}
-
-function displayCategories(categories) {
-    const categoriesList = document.getElementById('categoriesList');
-    if (!categoriesList) return;
-
-    if (!categories.length) {
-        categoriesList.innerHTML = `
-            <div class="col-12 text-center text-muted py-5">
-                <i class="fas fa-folder-open fa-3x mb-3"></i>
-                <p>Nenhuma categoria cadastrada ainda.</p>
-            </div>
-        `;
-        return;
-    }
-
-    categoriesList.innerHTML = categories.map(category => `
-        <div class="col-12">
-            <div class="card h-100">
-                <div class="card-body">
+    container.innerHTML = scripts.map(script => `
+        <div class="col-md-6 mb-4">
+            <div class="card script-card h-100">
+                <div class="script-header">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="card-title">${category.name}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">Peso: ${category.weight}</h6>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editCategory('${category.id}')">
+                        <h5 class="card-title mb-0">${script.title}</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editScript(${script.id})">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${category.id}')">
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteScript(${script.id})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="mt-2">
-                        ${category.keywords.map(keyword => `
-                            <span class="badge bg-secondary me-1 mb-1">${keyword}</span>
-                        `).join('')}
+                    <p class="text-muted small mb-0 mt-2">${script.description}</p>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">${script.content}</p>
+                    <div class="mt-3">
+                        ${script.tags.map(tag => 
+                            `<span class="badge bg-secondary me-1">${tag}</span>`
+                        ).join('')}
                     </div>
                 </div>
             </div>
         </div>
-    `).join('');
+    `).join('') || `
+        <div class="col-12">
+            <div class="alert alert-info">
+                Nenhum script cadastrado para esta etapa do funil.
+            </div>
+        </div>
+    `;
 }
 
-async function handleCategorySubmit(event) {
-    event.preventDefault();
-    setFormLoading('categoryForm', true);
+// Funções de CRUD
+function editScript(id) {
+    // Encontrar o script em mockScripts
+    let scriptToEdit;
+    let stage;
+    
+    for (const [key, scripts] of Object.entries(mockScripts)) {
+        const found = scripts.find(s => s.id === id);
+        if (found) {
+            scriptToEdit = found;
+            stage = key;
+            break;
+        }
+    }
 
-    const formData = new FormData(event.target);
-    const categoryData = {
-        name: formData.get('name').trim(),
-        keywords: formData.get('keywords')
-            .split(',')
-            .map(k => k.trim())
-            .filter(k => k.length > 0),
-        weight: Number(formData.get('weight'))
+    if (!scriptToEdit) return;
+
+    // Preencher o formulário
+    const form = document.getElementById('scriptForm');
+    form.querySelector('[name="funnelStage"]').value = stage;
+    form.querySelector('[name="title"]').value = scriptToEdit.title;
+    form.querySelector('[name="description"]').value = scriptToEdit.description;
+    form.querySelector('[name="content"]').value = scriptToEdit.content;
+    form.querySelector('[name="tags"]').value = scriptToEdit.tags.join(', ');
+
+    // Abrir o modal
+    const modal = new bootstrap.Modal(document.getElementById('newScriptModal'));
+    modal.show();
+}
+
+function deleteScript(id) {
+    if (!confirm('Tem certeza que deseja excluir este script?')) return;
+
+    // Em produção, aqui faria uma chamada à API
+    for (const stage in mockScripts) {
+        mockScripts[stage] = mockScripts[stage].filter(s => s.id !== id);
+    }
+
+    renderScripts();
+    showToast('Sucesso', 'Script excluído com sucesso!', 'success');
+}
+
+function saveScript() {
+    const form = document.getElementById('scriptForm');
+    const formData = new FormData(form);
+
+    const scriptData = {
+        id: Date.now(), // Em produção, o ID viria do backend
+        title: formData.get('title'),
+        description: formData.get('description'),
+        content: formData.get('content'),
+        tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(Boolean)
     };
 
-    try {
-        const response = await fetch('/api/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(categoryData)
-        });
-
-        await handleRequestError(response);
-        showToast('Sucesso', 'Categoria criada com sucesso!', 'success');
-        resetForm('categoryForm');
-        loadCategories();
-    } catch (error) {
-        showToast('Erro', error.message, 'danger');
-    } finally {
-        setFormLoading('categoryForm', false);
+    const stage = formData.get('funnelStage');
+    
+    if (!mockScripts[stage]) {
+        mockScripts[stage] = [];
     }
+    
+    mockScripts[stage].push(scriptData);
+
+    // Fechar modal e atualizar vista
+    const modal = bootstrap.Modal.getInstance(document.getElementById('newScriptModal'));
+    modal.hide();
+    form.reset();
+    renderScripts();
+    showToast('Sucesso', 'Script salvo com sucesso!', 'success');
 }
 
-// Gerenciamento de Templates
-async function loadTemplates() {
-    try {
-        const response = await fetch('/api/templates');
-        const templates = await handleRequestError(response);
-        state.templates = templates;
-        displayTemplates(templates);
-    } catch (error) {
-        showToast('Erro', error.message, 'danger');
-    }
-}
-
-function displayTemplates(templates) {
-    const templatesList = document.getElementById('templatesList');
-    if (!templatesList) return;
-
-    if (!templates.length) {
-        templatesList.innerHTML = `
-            <div class="col-12 text-center text-muted py-5">
-                <i class="fas fa-file-alt fa-3x mb-3"></i>
-                <p>Nenhum template cadastrado ainda.</p>
-            </div>
-        `;
-        return;
-    }
-
-    templatesList.innerHTML = templates.map(template => {
-        const category = state.categories.find(c => c.id === template.categoryId);
-        return `
-            <div class="col-12">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <span class="badge bg-primary mb-2">
-                                    ${category ? category.name : 'Categoria não encontrada'}
-                                </span>
-                                <p class="card-text">${template.text}</p>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editTemplate('${template.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate('${template.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-async function handleTemplateSubmit(event) {
-    event.preventDefault();
-    setFormLoading('templateForm', true);
-
-    const formData = new FormData(event.target);
-    const templateData = {
-        categoryId: formData.get('categoryId'),
-        text: formData.get('text').trim()
-    };
-
-    try {
-        const response = await fetch('/api/templates', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(templateData)
-        });
-
-        await handleRequestError(response);
-        showToast('Sucesso', 'Template criado com sucesso!', 'success');
-        resetForm('templateForm');
-        loadTemplates();
-    } catch (error) {
-        showToast('Erro', error.message, 'danger');
-    } finally {
-        setFormLoading('templateForm', false);
-    }
+// Função para mostrar notificações
+function showToast(title, message, type = 'info') {
+    // Implementação do toast (igual ao código anterior)
 }
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
-    // Carregar dados iniciais
-    loadCategories();
-    loadTemplates();
-
-    // Setup forms
-    const categoryForm = document.getElementById('categoryForm');
-    const templateForm = document.getElementById('templateForm');
-
-    if (categoryForm) {
-        categoryForm.addEventListener('submit', handleCategorySubmit);
-    }
-
-    if (templateForm) {
-        templateForm.addEventListener('submit', handleTemplateSubmit);
-    }
-
-    // Setup tabs
-    const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
-    tabs.forEach(tab => {
-        tab.addEventListener('shown.bs.tab', (event) => {
-            if (event.target.getAttribute('data-bs-target') === '#categories') {
-                loadCategories();
-            } else if (event.target.getAttribute('data-bs-target') === '#templates') {
-                loadTemplates();
-            }
-        });
-    });
+    renderScripts();
 });
