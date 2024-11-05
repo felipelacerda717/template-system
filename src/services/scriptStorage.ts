@@ -3,6 +3,7 @@
 import { Script, CreateScriptDTO, UpdateScriptDTO } from '../models/types';
 import fs from 'fs';
 import path from 'path';
+import { getCategoryById } from '../data/initial-data';
 
 class ScriptStorage {
     private static instance: ScriptStorage;
@@ -30,6 +31,9 @@ class ScriptStorage {
             if (fs.existsSync(this.scriptsFile)) {
                 const data = fs.readFileSync(this.scriptsFile, 'utf8');
                 this.scripts = JSON.parse(data);
+            } else {
+                // Se o arquivo não existir, criar com array vazio
+                fs.writeFileSync(this.scriptsFile, '[]');
             }
         } catch (error) {
             console.error('Erro ao carregar scripts:', error);
@@ -38,7 +42,11 @@ class ScriptStorage {
     }
 
     private saveScripts(): void {
-        fs.writeFileSync(this.scriptsFile, JSON.stringify(this.scripts, null, 2));
+        try {
+            fs.writeFileSync(this.scriptsFile, JSON.stringify(this.scripts, null, 2));
+        } catch (error) {
+            console.error('Erro ao salvar scripts:', error);
+        }
     }
 
     // CRUD Operations
@@ -46,8 +54,8 @@ class ScriptStorage {
         return this.scripts;
     }
 
-    async getScriptsByFunnelStage(stage: 'topo' | 'meio' | 'fundo'): Promise<Script[]> {
-        return this.scripts.filter(script => script.funnelStage === stage);
+    async getScriptsByCategory(categoryId: string): Promise<Script[]> {
+        return this.scripts.filter(script => script.categoryId === categoryId);
     }
 
     async getScript(id: string): Promise<Script | null> {
@@ -55,6 +63,11 @@ class ScriptStorage {
     }
 
     async createScript(data: CreateScriptDTO): Promise<Script> {
+        const category = getCategoryById(data.categoryId);
+        if (!category) {
+            throw new Error('Categoria não encontrada');
+        }
+
         const newScript: Script = {
             ...data,
             id: crypto.randomUUID(),
@@ -70,6 +83,13 @@ class ScriptStorage {
     async updateScript(id: string, data: UpdateScriptDTO): Promise<Script | null> {
         const index = this.scripts.findIndex(script => script.id === id);
         if (index === -1) return null;
+
+        if (data.categoryId) {
+            const category = getCategoryById(data.categoryId);
+            if (!category) {
+                throw new Error('Categoria não encontrada');
+            }
+        }
 
         const updatedScript = {
             ...this.scripts[index],
@@ -98,8 +118,7 @@ class ScriptStorage {
         const lowercaseQuery = query.toLowerCase();
         return this.scripts.filter(script => 
             script.title.toLowerCase().includes(lowercaseQuery) ||
-            script.content.toLowerCase().includes(lowercaseQuery) ||
-            script.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+            script.content.toLowerCase().includes(lowercaseQuery)
         );
     }
 }

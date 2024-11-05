@@ -10,19 +10,28 @@ const state = {
 };
 
 // Funções de API
+// Função para carregar scripts
+// Função para debug
+function logState() {
+    console.log('Current state:', state);
+}
+
+// Adicione esta chamada ao final do fetchScripts
 async function fetchScripts() {
-    try { 
+    try {
         const response = await fetch('/api/scripts');
         const scripts = await response.json();
+        console.log('Fetched scripts:', scripts); // Debug log
         
-        // Organizar scripts por etapa do funil
+        // Organizar scripts por categoria
         state.scripts = {
-            topo: scripts.filter(s => s.funnelStage === 'topo'),
-            meio: scripts.filter(s => s.funnelStage === 'meio'),
-            fundo: scripts.filter(s => s.funnelStage === 'fundo')
+            topo: scripts.filter(s => s.categoryId === 'primeiro-contato' || s.categoryId === 'identificacao-necessidades'),
+            meio: scripts.filter(s => s.categoryId === 'negociacao-preco'),
+            fundo: scripts.filter(s => s.categoryId === 'fechamento')
         };
         
         renderAllSections();
+        logState(); // Debug log
     } catch (error) {
         showToast('Erro', 'Não foi possível carregar os scripts', 'danger');
         console.error('Erro ao carregar scripts:', error);
@@ -104,24 +113,26 @@ function renderFunnelSection(stage, container) {
     if (!container) return;
 
     const scripts = state.scripts[stage] || [];
+    console.log(`Rendering ${stage} scripts:`, scripts); // Debug log
     
     if (scripts.length === 0) {
         container.innerHTML = `
-            <div class="col-12">
-                <div class="alert alert-info">
-                    Nenhum script cadastrado para esta etapa do funil.
-                </div>
+            <div class="alert alert-info">
+                Nenhum script cadastrado para esta etapa do funil.
             </div>
         `;
         return;
     }
 
     container.innerHTML = scripts.map(script => `
-        <div class="col-md-6 mb-4">
-            <div class="card script-card h-100">
-                <div class="card-header d-flex justify-content-between align-items-start">
+        <div class="col-12">
+            <div class="card script-card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">${script.title}</h5>
                     <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('${script.id}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
                         <button class="btn btn-sm btn-outline-primary" onclick="editScript('${script.id}')">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -132,20 +143,36 @@ function renderFunnelSection(stage, container) {
                 </div>
                 <div class="card-body">
                     <p class="card-text">${script.content}</p>
-                    ${script.tags ? `
-                        <div class="mt-3">
-                            ${script.tags.map(tag => 
-                                `<span class="badge bg-secondary me-1">${tag}</span>`
-                            ).join('')}
+                    ${script.tags && script.tags.length > 0 ? `
+                        <div class="mt-2">
+                            ${script.tags.map(tag => `
+                                <span class="badge bg-secondary me-1">${tag}</span>
+                            `).join('')}
                         </div>
                     ` : ''}
                 </div>
                 <div class="card-footer text-muted">
-                    <small>Atualizado: ${new Date(script.updatedAt).toLocaleString()}</small>
+                    <small>Atualizado em: ${new Date(script.updatedAt).toLocaleString()}</small>
                 </div>
             </div>
         </div>
     `).join('');
+}
+
+// Função para copiar script para clipboard
+async function copyToClipboard(scriptId) {
+    const script = Object.values(state.scripts)
+        .flat()
+        .find(s => s.id === scriptId);
+    
+    if (!script) return;
+
+    try {
+        await navigator.clipboard.writeText(script.content);
+        showToast('Sucesso', 'Script copiado para a área de transferência!', 'success');
+    } catch (error) {
+        showToast('Erro', 'Não foi possível copiar o script', 'danger');
+    }
 }
 
 // Handlers de Formulário
@@ -154,31 +181,56 @@ async function handleScriptSubmit(event) {
     const form = event.target;
     const formData = new FormData(form);
     
+    // Preparar dados do script
     const scriptData = {
         title: formData.get('title').trim(),
         content: formData.get('content').trim(),
-        funnelStage: formData.get('funnelStage'),
-        tags: formData.get('tags')?.split(',').map(tag => tag.trim()).filter(Boolean)
+        categoryId: formData.get('categoryId'),
+        tags: formData.get('tags')
+            ?.split(',')
+            .map(tag => tag.trim())
+            .filter(Boolean) || []
     };
 
-    const scriptId = form.dataset.scriptId;
-    let success;
+    try {
+        // Mostrar loading
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
 
-    if (scriptId) {
-        // Atualização
-        success = await updateScript(scriptId, scriptData);
-    } else {
-        // Criação
-        success = await createScript(scriptData);
-    }
+        const response = await fetch('/api/scripts', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(scriptData)
+        });
 
-    if (success) {
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.details || error.error || 'Erro ao criar script');
+        }
+
+        // Fechar modal e resetar form
         const modal = bootstrap.Modal.getInstance(document.getElementById('newScriptModal'));
         modal.hide();
         form.reset();
-        delete form.dataset.scriptId;
+
+        // Atualizar lista de scripts
+        await fetchScripts();
+
+        // Mostrar mensagem de sucesso
+        showToast('Sucesso', 'Script criado com sucesso!', 'success');
+    } catch (error) {
+        showToast('Erro', error.message, 'danger');
+    } finally {
+        // Restaurar botão
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Salvar Script';
     }
 }
+
 
 function editScript(id) {
     const script = Object.values(state.scripts)
@@ -241,6 +293,33 @@ function createToastContainer() {
     return container;
 }
 
+// Funções utilitárias
+function getCategoryById(categoryId) {
+    const funnelSections = {
+        topo: {
+            categories: [
+                { id: 'primeiro-contato', funnelStage: 'topo' },
+                { id: 'identificacao-necessidades', funnelStage: 'topo' }
+            ]
+        },
+        meio: {
+            categories: [
+                { id: 'negociacao-preco', funnelStage: 'meio' }
+            ]
+        },
+        fundo: {
+            categories: [
+                { id: 'fechamento', funnelStage: 'fundo' }
+            ]
+        }
+    };
+
+    for (const section of Object.values(funnelSections)) {
+        const category = section.categories.find(cat => cat.id === categoryId);
+        if (category) return category;
+    }
+    return null;
+}
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     // Carregar scripts iniciais
@@ -251,7 +330,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) {
         form.addEventListener('submit', handleScriptSubmit);
     }
-
     // Resetar form quando o modal for fechado
     const modal = document.getElementById('newScriptModal');
     if (modal) {
@@ -267,5 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const submitButton = modal.querySelector('.modal-footer .btn-primary');
             submitButton.textContent = 'Salvar Script';
         });
+    
     }
+
 });

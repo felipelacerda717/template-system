@@ -1,15 +1,24 @@
 [
   {
-    "title": "Script para estabelecer um primeiro contato",
-    "content": "Olá, {Nome do Contato}, meu nome é {Seu Nome} e trabalho na  {Sua Empresa}. Recebi seu contato porque você interagiu em nosso anúncio,  tenho certeza que nossos serviços podem ser de grande interesse para você. Você tem alguns minutos para conversar?",
-    "funnelStage": "topo",
+    "title": "teste",
+    "content": "teste",
+    "categoryId": "primeiro-contato",
     "tags": [
-      "primeiro contato",
-      "interação",
-      "interesse"
+      "teste"
     ],
-    "id": "23d08abf-4910-4962-b0f2-04847ef51fa6",
-    "createdAt": "2024-11-05T16:40:07.459Z",
-    "updatedAt": "2024-11-05T16:40:07.459Z"
+    "id": "820faf6b-2dce-4f7e-9cc0-cba91bc74957",
+    "createdAt": "2024-11-05T21:07:37.869Z",
+    "updatedAt": "2024-11-05T21:07:37.869Z"
+  },
+  {
+    "title": "teste",
+    "content": "teste",
+    "categoryId": "primeiro-contato",
+    "tags": [
+      "teste"
+    ],
+    "id": "a20ea9b3-7036-401a-8340-b6f03d656b71",
+    "createdAt": "2024-11-05T21:07:37.882Z",
+    "updatedAt": "2024-11-05T21:07:37.882Z"
   }
 ]

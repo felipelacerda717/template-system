@@ -3,23 +3,28 @@
 import { Request, Response, NextFunction } from 'express';
 import { CreateScriptDTO, UpdateScriptDTO } from '../models/types';
 import scriptStorage from '../services/scriptStorage';
+import { getCategoryById } from '../data/initial-data';
 
 class ScriptController {
     /**
      * GET /api/scripts
-     * Retorna todos os scripts ou filtrados por etapa do funil
+     * Retorna todos os scripts ou filtrados por categoria
      */
     public async getAllScripts(req: Request, res: Response, next: NextFunction) {
         try {
-            const { stage, search } = req.query;
+            const { categoryId } = req.query;
             
-            if (search && typeof search === 'string') {
-                const scripts = await scriptStorage.searchScripts(search);
-                return res.json(scripts);
-            }
-            
-            if (stage && ['topo', 'meio', 'fundo'].includes(stage as string)) {
-                const scripts = await scriptStorage.getScriptsByFunnelStage(stage as 'topo' | 'meio' | 'fundo');
+            if (categoryId && typeof categoryId === 'string') {
+                // Verificar se a categoria existe
+                const category = getCategoryById(categoryId);
+                if (!category) {
+                    return res.status(404).json({
+                        error: 'Categoria não encontrada',
+                        details: `Não existe uma categoria com o ID: ${categoryId}`
+                    });
+                }
+
+                const scripts = await scriptStorage.getScriptsByCategory(categoryId);
                 return res.json(scripts);
             }
 
@@ -31,8 +36,7 @@ class ScriptController {
     }
 
     /**
-     * GET /api/scripts/:id 
-     * Retorna um script específico
+     * GET /api/scripts/:id
      */
     public async getScript(req: Request, res: Response, next: NextFunction) {
         try {
@@ -40,7 +44,7 @@ class ScriptController {
             const script = await scriptStorage.getScript(id);
             
             if (!script) {
-                return res.status(404).json({
+                return res.status(404).json({ 
                     error: 'Script não encontrado',
                     details: `Não foi possível encontrar um script com o ID: ${id}`
                 });
@@ -54,7 +58,6 @@ class ScriptController {
 
     /**
      * POST /api/scripts
-     * Cria um novo script
      */
     public async createScript(req: Request, res: Response, next: NextFunction) {
         try {
@@ -75,10 +78,19 @@ class ScriptController {
                 });
             }
 
-            if (!['topo', 'meio', 'fundo'].includes(scriptData.funnelStage)) {
+            if (!scriptData.categoryId?.trim()) {
                 return res.status(400).json({
-                    error: 'Etapa do funil inválida',
-                    details: 'A etapa do funil deve ser: topo, meio ou fundo'
+                    error: 'Categoria inválida',
+                    details: 'A categoria é obrigatória'
+                });
+            }
+
+            // Verificar se a categoria existe
+            const category = getCategoryById(scriptData.categoryId);
+            if (!category) {
+                return res.status(400).json({
+                    error: 'Categoria inválida',
+                    details: 'A categoria especificada não existe'
                 });
             }
 
@@ -91,7 +103,6 @@ class ScriptController {
 
     /**
      * PUT /api/scripts/:id
-     * Atualiza um script existente
      */
     public async updateScript(req: Request, res: Response, next: NextFunction) {
         try {
@@ -113,12 +124,14 @@ class ScriptController {
                 });
             }
 
-            if (updateData.funnelStage !== undefined && 
-                !['topo', 'meio', 'fundo'].includes(updateData.funnelStage)) {
-                return res.status(400).json({
-                    error: 'Etapa do funil inválida',
-                    details: 'A etapa do funil deve ser: topo, meio ou fundo'
-                });
+            if (updateData.categoryId !== undefined) {
+                const category = getCategoryById(updateData.categoryId);
+                if (!category) {
+                    return res.status(400).json({
+                        error: 'Categoria inválida',
+                        details: 'A categoria especificada não existe'
+                    });
+                }
             }
 
             const updatedScript = await scriptStorage.updateScript(id, updateData);
@@ -138,7 +151,6 @@ class ScriptController {
 
     /**
      * DELETE /api/scripts/:id
-     * Remove um script
      */
     public async deleteScript(req: Request, res: Response, next: NextFunction) {
         try {
