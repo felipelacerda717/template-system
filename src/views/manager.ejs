@@ -175,44 +175,49 @@
     </div>
 
     <!-- Modal para Novo Script -->
-    <div class="modal fade" id="newScriptModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Script</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="scriptForm">
-                        <div class="mb-3">
-                            <label class="form-label">Etapa do Funil</label>
-                            <select class="form-select" name="funnelStage" required>
-                                <option value="">Selecione a etapa...</option>
-                                <option value="topo">Topo de Funil</option>
-                                <option value="meio">Meio de Funil</option>
-                                <option value="fundo">Fundo de Funil</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Título</label>
-                            <input type="text" class="form-control" name="title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Texto do Script</label>
-                            <textarea class="form-control" name="content" rows="6" required></textarea>
-                            <small class="form-text text-muted">
-                                Use {Nome do Contato}, {Seu Nome}, {Sua Empresa} para campos dinâmicos
-                            </small>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="saveScript()">Salvar Script</button>
-                </div>
+<div class="modal fade" id="newScriptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Script</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="scriptForm">
+                    <div class="mb-3">
+                        <label class="form-label">Etapa do Funil</label>
+                        <select class="form-select" name="funnelStage" required>
+                            <option value="">Selecione a etapa...</option>
+                            <option value="topo">Topo de Funil</option>
+                            <option value="meio">Meio de Funil</option>
+                            <option value="fundo">Fundo de Funil</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Texto do Script</label>
+                        <textarea class="form-control" name="content" rows="6" required></textarea>
+                        <small class="form-text text-muted">
+                            Use {Nome do Contato}, {Seu Nome}, {Sua Empresa} para campos dinâmicos
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags</label>
+                        <input type="text" class="form-control" name="tags" 
+                            placeholder="Separadas por vírgula (ex: primeiro contato, apresentação)">
+                    </div>
+                    <div class="modal-footer p-0 pt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Script</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

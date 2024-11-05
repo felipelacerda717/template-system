@@ -4,6 +4,7 @@
   "description": "Sistema de templates de mensagens",
   "main": "dist/index.js",
   "scripts": {
+    "test:api": "ts-node src/tests/api-test.ts",
     "start": "node dist/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec ts-node src/index.ts",
     "build": "tsc",
