@@ -9,13 +9,42 @@ const state = {
     }
 };
 
+
+// Verificar autenticação antes de qualquer operação
+function checkAuth() {
+    if (!window.auth?.isAuthenticated()) {
+        window.location.href = '/login';
+        return false;
+    }
+    return true;
+}
+
+// Verificar se é usuário master
+function checkMasterUser() {
+    if (!window.auth?.isMasterUser()) {
+        showToast('Erro', 'Acesso negado. Apenas usuários master podem realizar esta operação.', 'danger');
+        return false;
+    }
+    return true;
+}
+
 // Funções de API
 async function fetchScripts() {
-    try {
-        const response = await fetch('/api/scripts');
-        const scripts = await response.json();
-        console.log('Scripts carregados:', scripts); // Debug
+    if (!checkAuth()) return;
 
+    try {
+        const response = await fetch('/api/scripts', {
+            headers: {
+                'Authorization': `Bearer ${window.auth.getToken()}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao carregar scripts');
+        }
+
+        const scripts = await response.json();
+        
         // Organizar scripts por categoria
         state.scripts = {
             topo: scripts.filter(s => s.categoryId === 'primeiro-contato' || s.categoryId === 'identificacao-necessidades'),
@@ -32,6 +61,13 @@ async function fetchScripts() {
 
 // Funções de renderização
 function renderAllSections() {
+    const isMaster = window.auth?.isMasterUser();
+    
+    // Elementos que só devem aparecer para usuários master
+    document.querySelectorAll('[data-master-only]').forEach(el => {
+        el.style.display = isMaster ? '' : 'none';
+    });
+
     renderFunnelSection('topo', document.getElementById('topoFunilScripts'));
     renderFunnelSection('meio', document.getElementById('meioFunilScripts'));
     renderFunnelSection('fundo', document.getElementById('fundoFunilScripts'));
@@ -90,6 +126,9 @@ function renderFunnelSection(stage, container) {
 // Manipuladores de Formulário
 async function handleScriptSubmit(event) {
     event.preventDefault();
+    
+    if (!checkAuth() || !checkMasterUser()) return;
+
     const form = event.target;
     const formData = new FormData(form);
     
@@ -117,7 +156,10 @@ async function handleScriptSubmit(event) {
 
         const response = await fetch(url, {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.auth.getToken()}`
+            },
             body: JSON.stringify(scriptData)
         });
 
@@ -145,6 +187,7 @@ async function handleScriptSubmit(event) {
         submitButton.innerHTML = 'Salvar Script';
     }
 }
+
 
 // Funções de CRUD
 async function copyScript(scriptId) {
@@ -193,11 +236,16 @@ function editScript(scriptId) {
 }
 
 async function deleteScript(scriptId) {
+    if (!checkAuth() || !checkMasterUser()) return;
+    
     if (!confirm('Tem certeza que deseja excluir este script?')) return;
 
     try {
         const response = await fetch(`/api/scripts/${scriptId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${window.auth.getToken()}`
+            }
         });
 
         if (!response.ok) {
@@ -245,6 +293,16 @@ function createToastContainer() {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar autenticação
+    if (!checkAuth()) return;
+
+    // Verificar se é usuário master para elementos específicos
+    const isMaster = window.auth?.isMasterUser();
+    const newScriptBtn = document.querySelector('[data-bs-target="#newScriptModal"]');
+    if (newScriptBtn) {
+        newScriptBtn.style.display = isMaster ? '' : 'none';
+    }
+
     // Carregar scripts iniciais
     fetchScripts();
 

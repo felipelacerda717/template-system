@@ -1,3 +1,4 @@
+<!-- src/views/partials/navbar.ejs -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
     <div class="container">
         <a class="navbar-brand fw-bold text-primary" href="/">
@@ -14,7 +15,8 @@
                         Início
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- Botão visível apenas para usuários master -->
+                <li class="nav-item" data-master-only>
                     <a class="nav-link" href="/manager">
                         <i class="fas fa-cogs me-1"></i>
                         Gerenciador
@@ -24,12 +26,12 @@
                     <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
                        data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user-circle me-1"></i>
-                        Usuário Master
+                        <span id="userRole">Usuário</span>
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a></li>
                     </ul>
                 </li>
             </ul>

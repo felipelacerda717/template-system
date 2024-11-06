@@ -4,18 +4,18 @@ import { Request, Response, NextFunction } from 'express';
 import { CreateScriptDTO, UpdateScriptDTO } from '../models/types';
 import scriptStorage from '../services/scriptStorage';
 import { getCategoryById } from '../data/initial-data';
+import { ClientRequest } from '../middleware/clientMiddleware';
 
 class ScriptController {
     /**
      * GET /api/scripts
      * Retorna todos os scripts ou filtrados por categoria
      */
-    public async getAllScripts(req: Request, res: Response, next: NextFunction) {
+    public async getAllScripts(req: ClientRequest, res: Response, next: NextFunction) {
         try {
             const { categoryId } = req.query;
             
             if (categoryId && typeof categoryId === 'string') {
-                // Verificar se a categoria existe
                 const category = getCategoryById(categoryId);
                 if (!category) {
                     return res.status(404).json({
@@ -24,11 +24,23 @@ class ScriptController {
                     });
                 }
 
-                const scripts = await scriptStorage.getScriptsByCategory(categoryId);
+                let scripts = await scriptStorage.getScriptsByCategory(categoryId);
+
+                // Filtrar scripts baseado no tipo do cliente
+                if (req.client && !req.client.isBlack) {
+                    scripts = scripts.filter(script => !script.blackOnly);
+                }
+
                 return res.json(scripts);
             }
 
-            const scripts = await scriptStorage.getAllScripts();
+            let scripts = await scriptStorage.getAllScripts();
+
+            // Filtrar scripts baseado no tipo do cliente
+            if (req.client && !req.client.isBlack) {
+                scripts = scripts.filter(script => !script.blackOnly);
+            }
+
             res.json(scripts);
         } catch (error) {
             next(error);
@@ -38,7 +50,7 @@ class ScriptController {
     /**
      * GET /api/scripts/:id
      */
-    public async getScript(req: Request, res: Response, next: NextFunction) {
+    public async getScript(req: ClientRequest, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;
             const script = await scriptStorage.getScript(id);
@@ -47,6 +59,14 @@ class ScriptController {
                 return res.status(404).json({ 
                     error: 'Script não encontrado',
                     details: `Não foi possível encontrar um script com o ID: ${id}`
+                });
+            }
+
+            // Verificar se o cliente tem acesso ao script
+            if (script.blackOnly && req.client && !req.client.isBlack) {
+                return res.status(403).json({
+                    error: 'Acesso negado',
+                    details: 'Este script é exclusivo para clientes black'
                 });
             }
             
@@ -94,7 +114,12 @@ class ScriptController {
                 });
             }
 
-            const newScript = await scriptStorage.createScript(scriptData);
+            // Criar script com flag blackOnly
+            const newScript = await scriptStorage.createScript({
+                ...scriptData,
+                blackOnly: Boolean(scriptData.blackOnly)
+            });
+
             res.status(201).json(newScript);
         } catch (error) {
             next(error);
@@ -134,7 +159,13 @@ class ScriptController {
                 }
             }
 
-            const updatedScript = await scriptStorage.updateScript(id, updateData);
+            // Atualizar script mantendo a flag blackOnly se não foi especificada
+            const updatedScript = await scriptStorage.updateScript(id, {
+                ...updateData,
+                blackOnly: updateData.blackOnly !== undefined 
+                    ? Boolean(updateData.blackOnly) 
+                    : undefined
+            });
 
             if (!updatedScript) {
                 return res.status(404).json({

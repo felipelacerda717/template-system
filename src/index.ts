@@ -4,6 +4,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { funnelSections, getCategoryById } from './data/initial-data';
 import scriptRoutes from './routes/scriptRoutes';
+import authRoutes from './routes/authRoutes';
+
 
 const app = express();
 
@@ -14,8 +16,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // Rotas da API
 app.use('/api/scripts', scriptRoutes);
+app.use('/api/auth', authRoutes);
+
+
+app.get('/login', (req: Request, res: Response) => {
+    res.render('login');  // Isso renderiza o template login.ejs
+});
+
+// Redirecionar para login se não estiver autenticado
+app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!req.url.startsWith('/api/auth') && !req.url.startsWith('/js') && !req.url.startsWith('/css') && req.url !== '/login') {
+        // Verificar token aqui quando implementarmos autenticação
+        next();
+    } else {
+        next();
+    }
+});
 
 // Rota principal
 app.get('/', (req: Request, res: Response) => {

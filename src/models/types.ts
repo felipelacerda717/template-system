@@ -5,6 +5,8 @@ export interface Script {
     title: string;
     content: string;
     categoryId: string;
+    tags?: string[];
+    blackOnly: boolean;  // Nova propriedade
     createdAt: Date;
     updatedAt: Date;
 }
@@ -30,10 +32,24 @@ export interface CreateScriptDTO {
     title: string;
     content: string;
     categoryId: string;
+    tags?: string[];
+    blackOnly?: boolean;  // Opcional no DTO
 }
 
 export interface UpdateScriptDTO {
     title?: string;
     content?: string;
     categoryId?: string;
+    tags?: string[];
+    blackOnly?: boolean;  // Opcional no DTO
+}   
+
+// src/models/types.ts
+export interface User {
+    id: string;
+    username: string;
+    password: string;
+    role: 'master' | 'regular';
+    createdAt: Date;
+    updatedAt: Date;
 }

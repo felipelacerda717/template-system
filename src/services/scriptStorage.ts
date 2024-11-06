@@ -67,14 +67,15 @@ class ScriptStorage {
         if (!category) {
             throw new Error('Categoria não encontrada');
         }
-
+    
         const newScript: Script = {
             ...data,
             id: crypto.randomUUID(),
+            blackOnly: data.blackOnly ?? false, // Garante um valor padrão
             createdAt: new Date(),
             updatedAt: new Date()
         };
-
+    
         this.scripts.push(newScript);
         this.saveScripts();
         return newScript;
@@ -83,25 +84,26 @@ class ScriptStorage {
     async updateScript(id: string, data: UpdateScriptDTO): Promise<Script | null> {
         const index = this.scripts.findIndex(script => script.id === id);
         if (index === -1) return null;
-
+    
         if (data.categoryId) {
             const category = getCategoryById(data.categoryId);
             if (!category) {
                 throw new Error('Categoria não encontrada');
             }
         }
-
+    
+        const currentScript = this.scripts[index];
         const updatedScript = {
-            ...this.scripts[index],
+            ...currentScript,
             ...data,
+            blackOnly: data.blackOnly ?? currentScript.blackOnly, // Mantém o valor atual se não fornecido
             updatedAt: new Date()
         };
-
+    
         this.scripts[index] = updatedScript;
         this.saveScripts();
         return updatedScript;
     }
-
     async deleteScript(id: string): Promise<boolean> {
         const initialLength = this.scripts.length;
         this.scripts = this.scripts.filter(script => script.id !== id);
